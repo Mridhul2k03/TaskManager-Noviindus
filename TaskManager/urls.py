@@ -17,16 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from API import views 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    path('api/tasks/',views.TaskAPIView.as_view()),
-    path('api/tasks/<int:id>/',views.TaskUpdateAPIView.as_view()),
-    path('api/tasks/<int:id>/report/', views.TaskReportView.as_view(), name='task-report'),
     
     path('dashboard/', include('Dashboard.urls')),
+    path('api/', include('API.urls')),
     
     # jwt token
     

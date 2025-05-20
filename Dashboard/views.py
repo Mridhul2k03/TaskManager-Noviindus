@@ -5,6 +5,10 @@ from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from .forms import AssignTaskForm,UserForm,LoginForm,UserRollForm
 from django.urls import reverse_lazy
+from API.permissions import IsAdminUser, IsSuperAdminUser, IsAdminOrSuperAdmin, IsUser
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponseForbidden
+
 # Create your views here.
 
 class LoginView(View):
@@ -40,23 +44,39 @@ class IndexView(TemplateView):
             context['tasks'] = Task.objects.filter(assigned_to=user.id)
         return context
 
-class TaskEditView(UpdateView):
+class TaskEditView(LoginRequiredMixin,UpdateView):
     template_name = 'task_edit.html'
     model = Task
     form_class = AssignTaskForm
     success_url = reverse_lazy('index')
+    login_url = 'login'
 
-class CreateTaskView(CreateView):
+
+class CreateTaskView(LoginRequiredMixin,CreateView):
     template_name = 'task_edit.html'
     model = Task
     form_class = AssignTaskForm
     success_url = reverse_lazy('index')
+    login_url = 'login'
     
-class TaskDeleteView(DeleteView):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['admin', 'superadmin']:
+            return HttpResponseForbidden("You are not authorized to access this page.")
+        return super().dispatch(request, *args, **kwargs)
+    
+    
+class TaskDeleteView(LoginRequiredMixin,DeleteView):
     model = Task
     template_name = 'task_delete.html'
     success_url = reverse_lazy('index')
     pk_url_kwarg = 'pk'
+    login_url = 'login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['superadmin']:
+            return HttpResponseForbidden("You are not authorized to access this page.")
+        return super().dispatch(request, *args, **kwargs)
+    
     
 
 
@@ -71,32 +91,56 @@ class UsersView(TemplateView):
         return context
 
 
-class UserEditView(UpdateView):
+class UserEditView(LoginRequiredMixin,UpdateView):
     template_name = 'user_edit.html'
     model = User
     form_class = UserForm
     success_url = reverse_lazy('users')
+    login_url = 'login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['superadmin']:
+            return HttpResponseForbidden("You are not authorized to access this page.")
+        return super().dispatch(request, *args, **kwargs)
 
 
-class CreateUserView(CreateView):
+class CreateUserView(LoginRequiredMixin,CreateView):
     template_name = 'user_edit.html'
     model = User
     form_class = UserForm
     success_url = reverse_lazy('users')
+    login_url = 'login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['superadmin']:
+            return HttpResponseForbidden("You are not authorized to access this page.")
+        return super().dispatch(request, *args, **kwargs)
 
 
-class UserAddRoleView(CreateView):
+class UserAddRoleView(LoginRequiredMixin,CreateView):
     template_name = 'user_edit.html'
     model = User
     form_class = UserRollForm
     success_url = reverse_lazy('users')
+    login_url = 'login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['superadmin']:
+            return HttpResponseForbidden("You are not authorized to access this page.")
+        return super().dispatch(request, *args, **kwargs)
     
     
-class UserDeleteView(DeleteView):
+class UserDeleteView(LoginRequiredMixin,DeleteView):
     model = User
     template_name = 'user_delete.html'
     success_url = reverse_lazy('users')
     pk_url_kwarg = 'pk'
+    login_url = 'login'
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role not in ['superadmin']:
+            return HttpResponseForbidden("You are not authorized to access this page.")
+        return super().dispatch(request, *args, **kwargs)
 
 
 class CompletedTask(TemplateView):
